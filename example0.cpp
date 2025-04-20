@@ -30,7 +30,7 @@ struct Display<NestedError> {
 
 
 auto world() -> Result<int, NestedError> {
-    return Ok<int, NestedError>(0);
+    return ok<int, NestedError>(0);
 }
 
 auto hello() -> Result<int, RootError> {
@@ -59,25 +59,25 @@ struct Display<ParseError> {
 // Try to parse an integer; empty string or non‑digits produce errors
 Result<int,ParseError> parse_int(const std::string& s) {
     if (s.empty()) {
-        return Err<int,ParseError>(ParseError::Empty);
+        return err<int,ParseError>(ParseError::Empty);
     }
 
     for (char c : s) {
         if (!isdigit(c)) {
-            return Err<int, ParseError>(ParseError::NotANumber);
+            return err<int, ParseError>(ParseError::NotANumber);
         }
     }
 
-    return Ok<int, ParseError>(std::stoi(s));
+    return ok<int, ParseError>(std::stoi(s));
 }
 
 // Validate that the number is positive
 Result<void, ParseError> validate_positive(int x) {
     if (x <= 0) {
-        return Err<void, ParseError>(ParseError::NotANumber);
+        return err<void, ParseError>(ParseError::NotANumber);
     }
 
-    return Ok<ParseError>();
+    return ok<ParseError>();
 }
 
 int main() {

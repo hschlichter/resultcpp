@@ -28,25 +28,25 @@ struct Display<RootError> {
     }
 };
 
-TEST_CASE("Ok and Err basic behavior", "Result") {
-    SECTION("Ok holds value") {
-        auto r = Ok<int, TestError>(123);
+TEST_CASE("ok and err basic behavior", "Result") {
+    SECTION("ok holds value") {
+        auto r = ok<int, TestError>(123);
         REQUIRE(r.tag == Result<int, TestError>::Tag::Ok);
         REQUIRE(r.value == 123);
     }
-    SECTION("Err holds error") {
-        auto r = Err<int, TestError>(TestError::B);
+    SECTION("err holds error") {
+        auto r = err<int, TestError>(TestError::B);
         REQUIRE(r.tag == Result<int, TestError>::Tag::Err);
         REQUIRE(r.error == TestError::B);
     }
 }
 
 TEST_CASE("map_err transforms error type", "Result") {
-    auto r_ok = Ok<int, TestError>(5).map_err([] (TestError) { return RootError::D; });
+    auto r_ok = ok<int, TestError>(5).map_err([] (TestError) { return RootError::D; });
     REQUIRE(r_ok.tag == Result<int, RootError>::Tag::Ok);
     REQUIRE(r_ok.value == 5);
 
-    auto r_err = Err<int, TestError>(TestError::A).map_err([](TestError){ return RootError::C; });
+    auto r_err = err<int, TestError>(TestError::A).map_err([](TestError){ return RootError::C; });
     REQUIRE(r_err.tag == Result<int, RootError>::Tag::Err);
     REQUIRE(r_err.error == RootError::C);
 }
@@ -63,28 +63,28 @@ TEST_CASE("ok_or returns pointer or error fallback", "ok_or") {
 }
 
 TEST_CASE("unwrap_or returns value or fallback", "unwrap_or") {
-    auto r_ok = Ok<int, TestError>(7);
+    auto r_ok = ok<int, TestError>(7);
     REQUIRE(unwrap_or(r_ok, -1) == 7);
 
-    auto r_err = Err<int, TestError>(TestError::A);
+    auto r_err = err<int, TestError>(TestError::A);
     REQUIRE(unwrap_or(r_err, -1) == -1);
 }
 
 TEST_CASE("unwrap_or_else invokes callback on error", "unwrap_or_else") {
-    auto r_ok = Ok<int, TestError>(42);
+    auto r_ok = ok<int, TestError>(42);
     REQUIRE(unwrap_or_else(r_ok, [&](TestError){ return -2; }) == 42);
 
-    auto r_err = Err<int, TestError>(TestError::B);
+    auto r_err = err<int, TestError>(TestError::B);
     REQUIRE(unwrap_or_else(r_err, [&](TestError e){ return static_cast<int>(e) * 2; }) == static_cast<int>(TestError::B) * 2);
 }
 
 TEST_CASE("void Result specialization and helpers", "Result<void>") {
     // Ok<void>
-    Result<void, TestError> v_ok = Ok<TestError>();
+    Result<void, TestError> v_ok = ok<TestError>();
     REQUIRE(v_ok.tag == Result<void, TestError>::Tag::Ok);
 
     // Err<void>
-    Result<void, TestError> v_err = Err<void, TestError>(TestError::A);
+    Result<void, TestError> v_err = err<void, TestError>(TestError::A);
     REQUIRE(v_err.tag == Result<void, TestError>::Tag::Err);
 
     // unwrap_or for void (should not crash)

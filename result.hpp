@@ -6,10 +6,10 @@ template<typename T, typename E>
 struct Result;
 
 template<typename T, typename E>
-Result<T, E> Ok(T val);
+Result<T, E> ok(T val);
 
 template<typename T, typename E>
-Result<T, E> Err(E err);
+Result<T, E> err(E err);
 
 template<typename T, typename E>
 struct Result {
@@ -26,15 +26,15 @@ struct Result {
     auto map_err(F f) const -> Result<T, decltype(f(std::declval<E>()))> {
         static_assert(std::is_invocable_v<F, E>, "map_err: F must be callable with E");
         if (tag == Tag::Ok) {
-            return Ok<T, decltype(f(std::declval<E>()))>(value);
+            return ok<T, decltype(f(std::declval<E>()))>(value);
         } else {
-            return Err<T, decltype(f(std::declval<E>()))>(f(error));
+            return err<T, decltype(f(std::declval<E>()))>(f(error));
         }
     }
 };
 
 template<typename T, typename E>
-Result<T, E> Ok(T val) {
+Result<T, E> ok(T val) {
     return Result<T, E> { 
         .tag = Result<T, E>::Tag::Ok,
         .value = val
@@ -42,7 +42,7 @@ Result<T, E> Ok(T val) {
 }
 
 template<typename T, typename E>
-Result<T, E> Err(E err) {
+Result<T, E> err(E err) {
     Result<T, E> r;
     r.tag = Result<T, E>::Tag::Err;
     r.error = err;
@@ -59,15 +59,15 @@ struct Result<void, E> {
     auto map_err(F f) const -> Result<void, decltype(f(std::declval<E>()))> {
         static_assert(std::is_invocable_v<F, E>, "map_err: F must be callable with E");
         if (tag == Tag::Err) {
-            return Err<void, decltype(f(std::declval<E>()))>(f(error));
+            return err<void, decltype(f(std::declval<E>()))>(f(error));
         }
 
-        return Ok<void, decltype(f(std::declval<E>()))>();
+        return ok<void, decltype(f(std::declval<E>()))>();
     }
 };
 
 template<typename E>
-Result<void, E> Ok() {
+Result<void, E> ok() {
     return Result<void, E> { 
         Result<void, E>::Tag::Ok, 
         {} 
@@ -75,7 +75,7 @@ Result<void, E> Ok() {
 }
 
 template<typename E>
-Result<void, E> Err(E err) {
+Result<void, E> err(E err) {
     return Result<void, E> {
         Result<void, E>::Tag::Err,
         err
@@ -83,12 +83,12 @@ Result<void, E> Err(E err) {
 }
 
 template<typename Ptr, typename Error>
-auto ok_or(Ptr ptr, Error err) -> Result<decltype(ptr), Error> {
+auto ok_or(Ptr ptr, Error e) -> Result<decltype(ptr), Error> {
     if (ptr != nullptr) {
-        return Ok<decltype(ptr), Error>(ptr);
+        return ok<decltype(ptr), Error>(ptr);
     }
 
-    return Err<decltype(ptr), Error>(err);
+    return err<decltype(ptr), Error>(e);
 }
 
 template<typename E>
