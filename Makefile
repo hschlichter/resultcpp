@@ -8,8 +8,8 @@ LDINCLUDE =
 result_tests: result_tests.cpp 
 	$(CC) $< -o $(OUTDIR)/result_tests $(CFLAGS) $(INCLUDE) $(LDINCLUDE) $(LDFLAGS) `pkg-config -cflags catch2 -libs catch2-with-main`
 
-example0: example0.cpp
-	$(CC) $< -o $(OUTDIR)/example0 $(CFLAGS) $(INCLUDE) $(LDINCLUDE) $(LDFLAGS)
+example: example.cpp
+	$(CC) $< -o $(OUTDIR)/example $(CFLAGS) $(INCLUDE) $(LDINCLUDE) $(LDFLAGS)
 
 .PHONY: clean
 clean:

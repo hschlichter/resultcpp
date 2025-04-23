@@ -46,100 +46,83 @@ struct Result {
 - **`ok<T,E>(val)`** constructs a successful result.  
 - **`err<T,E>(err)`** constructs an error result.
 
-### `ok_or`
-
-Convert a nullable pointer into `Result<Ptr,E>`:
-
-```cpp
-template<typename Ptr, typename E>
-auto ok_or(Ptr ptr, E err) -> Result<decltype(ptr), E>;
-```
-
-Usage:
-
-```cpp
-SDL_Window* w = SDL_CreateWindow(...);
-auto res = ok_or(w, SdlError::WindowCreate);
-```
-
-### `.map_err(...)`
-
-Transform the error type without modifying the success value:
-
-```cpp
-result.map_err(AppErrorTraits<SdlError>::convert);
-```
-
 ---
 
-## Quickstart Example
+## Example
 
 ```cpp
 #include "result.hpp"
 
 ...
+enum class ParseError {
+    Empty, 
+    NotANumber 
+};
+
+template<>
+struct Display<ParseError> {
+    static void print(ParseError e) {
+        switch(e) {
+            case ParseError::Empty: std::cerr << "Error: input was empty\n"; break;
+            case ParseError::NotANumber: std::cerr << "Error: not a number\n"; break;
+        }
+    }
+};
+
+// Try to parse an integer; empty string or non‑digits produce errors
+Result<int,ParseError> parse_int(const std::string& s) {
+    if (s.empty()) {
+        return err<int,ParseError>(ParseError::Empty);
+    }
+
+    for (char c : s) {
+        if (!isdigit(c)) {
+            return err<int, ParseError>(ParseError::NotANumber);
+        }
+    }
+
+    return ok<int, ParseError>(std::stoi(s));
+}
+
+// Validate that the number is positive
+Result<void, ParseError> validate_positive(int x) {
+    if (x <= 0) {
+        return err<void, ParseError>(ParseError::NotANumber);
+    }
+
+    return ok<ParseError>();
+}
 
 int main() {
-  // 1. Initialize SDL
-  unwrap_or_exit(
-    init_sdl()
-      .map_err(AppErrorTraits<SdlError>::convert)
-  );
+    // Fatal: must parse or exit
+    int n = unwrap(parse_int("123"));
+    assert(n == 123);
 
-  // 2. Create window
-  SDL_Window* window = unwrap_or_exit(
-    create_window()
-      .map_err(AppErrorTraits<SdlError>::convert)
-  );
+    // Non‑fatal: fallback to zero
+    int m = unwrap_or(parse_int(""), 0);
+    assert(m == 0);
 
-  // 3. Create Vulkan instance
-  VkInstance instance = unwrap_or_exit(
-    create_instance(window)
-      .map_err(AppErrorTraits<VkError>::convert)
-  );
+    // Non‑fatal with custom handler
+    int k = unwrap_or_else(parse_int("abc"), [](ParseError){
+        return 42;
+    });
+    assert(k == 42);
 
-  // 4. Create Vulkan surface
-  VkSurfaceKHR surface = unwrap_or_exit(
-    create_surface(window, instance)
-      .map_err(AppErrorTraits<SdlError>::convert)
-  );
+    // Void unwrap
+    unwrap(validate_positive(n));
 
-  printf("Initialization successful.\n");
-  return 0;
+    // Void non‑fatal: just prints if error
+    auto result = validate_positive(-5);
+    assert((result.tag == Result<void, ParseError>::Tag::Err));
+
+    // Void non‑fatal with handler
+    bool cleaned = false;
+    unwrap_or_else(validate_positive(-1), [&](ParseError) {
+        cleaned = true;
+    });
+    assert(cleaned);
+
+    return 0;
 }
 ```
-
-Each call returns a `Result<T,DomainError>`, which is then mapped into an `AppError` and unwrapped or exits on failure.
-
----
-
-## Helpers & Extensions
-
-- **`unwrap_or_exit(r)`**: If `r` is `Err`, prints the error and calls `std::exit(1)`; otherwise returns the contained value.  
-- **Additional patterns** you can add:
-  - `.map(F f)` — transform the success value.  
-  - `.and_then(F f)` — chain another fallible call.  
-  - `.unwrap_or(default)` — return the value or a default.
-
-Feel free to extend `result.hpp` with these utilities as needed.
-
----
-
-## Defining New Error Domains
-
-1. **Declare** your error enum:
-```cpp
-    enum class MyError { Foo, Bar, Baz };
-```
-2. **Specialize** the conversion traits:
-```cpp
-    template<> struct AppErrorTraits<MyError> {
-        static AppError convert(MyError e) {
-            return AppError{ AppError::Kind::MyDomain, .data = { .my = e } };
-        }
-    };
-```
-3. **Return** `Result<T,MyError>` from your functions.
-
-
 

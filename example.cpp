@@ -1,6 +1,6 @@
+#include <cassert>
 #include <iostream>
 #include "result.hpp"
-
 
 enum class RootError {
     Hello, 
@@ -83,33 +83,33 @@ Result<void, ParseError> validate_positive(int x) {
 int main() {
     // Fatal: must parse or exit
     int n = unwrap(parse_int("123"));
-    std::cout << "Parsed: " << n << "\n";
+    assert(n == 123);
 
     // Non‑fatal: fallback to zero
     int m = unwrap_or(parse_int(""), 0);
-    std::cout << "Got m=" << m << "\n";
+    assert(m == 0);
 
     // Non‑fatal with custom handler
     int k = unwrap_or_else(parse_int("abc"), [](ParseError){
-        std::cout << "Recovering from bad input, using 42\n";
         return 42;
     });
-    std::cout << "Got k=" << k << "\n";
+    assert(k == 42);
 
     // Void unwrap
     unwrap(validate_positive(n));
-    std::cout << "n is positive\n";
 
     // Void non‑fatal: just prints if error
-    unwrap_or(validate_positive(-5), (void*)nullptr);
-    std::cout << "Continuing after validation\n";
+    auto result = validate_positive(-5);
+    assert((result.tag == Result<void, ParseError>::Tag::Err));
 
     // Void non‑fatal with handler
-    unwrap_or_else(validate_positive(-1), [&](ParseError){
-        std::cout << "Cleanup on invalid input\n";
+    bool cleaned = false;
+    unwrap_or_else(validate_positive(-1), [&](ParseError) {
+        cleaned = true;
     });
+    assert(cleaned);
 
-    test_nested_error();
+    // test_nested_error();
 
     return 0;
 }

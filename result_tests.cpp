@@ -88,7 +88,7 @@ TEST_CASE("void Result specialization and helpers", "Result<void>") {
     REQUIRE(v_err.tag == Result<void, TestError>::Tag::Err);
 
     // unwrap_or for void (should not crash)
-    unwrap_or(v_err, (void*)nullptr);
+    // unwrap_or(v_err, (void*)nullptr);
 
     // unwrap_or_else for void
     bool called = false;

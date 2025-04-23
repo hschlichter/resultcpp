@@ -121,19 +121,10 @@ void unwrap(const Result<void, E>& res) {
 template<typename T, typename E>
 T unwrap_or(const Result<T, E>& res, T fallback) {
     if (res.tag == Result<T, E>::Tag::Err) {
-        Display<E>::print(res.error);
         return fallback;
     }
 
     return res.value;
-}
-
-// Non-fatal void specialization: ignore failure by printing only
-template<typename E>
-void unwrap_or(const Result<void, E>& res, void*) {
-    if (res.tag == Result<void, E>::Tag::Err) {
-        Display<E>::print(res.error);
-    }
 }
 
 // Non-fatal with callback: invoke on_error on error
@@ -141,7 +132,6 @@ template<typename T, typename E, typename F>
 T unwrap_or_else(const Result<T, E>& res, F on_error) {
     static_assert(std::is_invocable_v<F, E>, "unwrap_or_else: F must be callable with E");
     if (res.tag == Result<T, E>::Tag::Err) {
-        Display<E>::print(res.error);
         return on_error(res.error);
     }
 
@@ -153,8 +143,10 @@ template<typename E, typename F>
 void unwrap_or_else(const Result<void, E>& res, F on_error) {
     static_assert(std::is_invocable_v<F, E>, "unwrap_or_else: F must be callable with E");
     if (res.tag == Result<void, E>::Tag::Err) {
-        Display<E>::print(res.error);
         on_error(res.error);
     }
 }
 
+// .map(F f)` — transform the success value.  
+// .and_then(F f)` — chain another fallible call.  
+// .unwrap_or(default)` — return the value or a default.
