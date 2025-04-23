@@ -8,7 +8,7 @@ Eliminates nested checks, clarifies error domains, and keeps your “happy path�
 ## Features
 
 - **Explicit**: Every fallible function returns `Result<T, E>`, making errors part of the signature.
-- **Type‑Safe**: Separate error enums for SDL (`SdlError`) and Vulkan (`VkError`), with conversion to a unified `AppError`.
+- **Type‑Safe**: Separate error enums with support for propogation conversion.
 - **Zero Overhead**: A tag + union adds only a couple of bytes—no exceptions, no RTTI.
 - **Composable**: Chain operations with `.map_err()`, `ok_or()`, and custom traits to maintain linear control flow.
 - **Customizable**: Easily add new domains or helpers (`map()`, `and_then()`, `unwrap_or(default)`, etc.).
