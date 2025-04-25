@@ -122,6 +122,21 @@ int main() {
         .unwrap();
     assert(g == 123.0f);
 
+    auto h = parse_int("345")
+        .and_then([] (int i) {
+            return ok<float, ParseError>(static_cast<float>(i));
+        })
+        .unwrap();
+    assert(h == 345.0f);
+
+    auto check = false;
+    parse_int("234")
+        .and_then([&] (int) {
+            check = true;
+            return ok<ParseError>();
+        });
+    assert(check);
+
     test_nested_error();
     return 0;
 }

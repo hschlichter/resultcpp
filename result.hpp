@@ -1,6 +1,7 @@
 #pragma once
 #include <cstdlib>
 #include <type_traits>
+#include <utility>
 
 template<typename T, typename E>
 struct Result;
@@ -19,10 +20,14 @@ struct Display {
 
 template<typename T, typename E>
 struct Result {
+    using value_type = T;
+    using error_type = E;
+
     enum class Tag { 
         Ok, 
         Err 
     } tag;
+
     union {
         T value;
         E error;
@@ -45,6 +50,15 @@ struct Result {
             return ok<T, decltype(f(std::declval<E>()))>(value);
         } else {
             return err<T, decltype(f(std::declval<E>()))>(f(error));
+        }
+    }
+
+    template<typename F>
+    auto and_then(F f) -> decltype(f(std::declval<T>())) { // You should always return a Result<T, E>
+        if (tag == Tag::Ok) {
+            return f(value);
+        } else {
+            return err<typename decltype(f(value))::value_type, E>(error);
         }
     }
     
@@ -77,7 +91,12 @@ auto err(E err) -> Result<T, E> {
 
 template<typename E>
 struct Result<void, E> {
-    enum class Tag { Ok, Err } tag;
+    using value_type = void;
+    using error_type = E;
+
+    enum class Tag { 
+        Ok, Err 
+    } tag;
     E error;
 
     template<typename F>
