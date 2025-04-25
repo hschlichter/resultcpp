@@ -1,3 +1,5 @@
+#include "catch2/catch_test_macros.hpp"
+#include <type_traits>
 #define CATCH_CONFIG_MAIN
 #include <catch2/catch_all.hpp>
 #include "result.hpp"  // include the implementation file directly for testing
@@ -96,3 +98,44 @@ TEST_CASE("void Result specialization and helpers", "Result<void>") {
     REQUIRE(called);
 }
 
+TEST_CASE(".unwrap from result") {
+    auto r = ok<int, TestError>(42);
+    REQUIRE(r.unwrap() == 42);
+}
+
+TEST_CASE(".unwrap result errors") {
+    auto r = err<int, TestError>(TestError::A);
+    REQUIRE(r.tag == Result<int, TestError>::Tag::Err);
+    // r.unwrap();
+}
+
+TEST_CASE("map value type int into char") {
+    auto r = ok<int, TestError>(42)
+        .map([] (int i) {
+            return static_cast<char>(i);
+        })
+        .unwrap();
+    REQUIRE(r == '*');
+}
+
+TEST_CASE("verify types of map before and after") {
+    auto r0 = ok<int, TestError>(42);
+    using R0 = decltype(r0);
+    STATIC_REQUIRE(std::is_same<typename R0::value_type, int>());
+
+    auto r1 = r0.map([] (int i) {
+        return static_cast<char>(i);
+    });
+    using R1 = decltype(r1);
+    STATIC_REQUIRE(std::is_same<typename R1::value_type, char>());
+}
+
+TEST_CASE() {
+    auto h = ok<int, TestError>(22)
+        .and_then([] (int i) {
+            REQUIRE(i == 22);
+            return ok<int, TestError>(i * 2);
+        })
+        .unwrap();
+    REQUIRE(h == 44);
+}
