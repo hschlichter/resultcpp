@@ -1,5 +1,6 @@
 #include <cassert>
 #include <iostream>
+#include <string>
 #include "result.hpp"
 
 enum class RootError {
@@ -57,7 +58,7 @@ struct Display<ParseError> {
 };
 
 // Try to parse an integer; empty string or non‑digits produce errors
-Result<int,ParseError> parse_int(const std::string& s) {
+Result<int, ParseError> parse_int(const std::string& s) {
     if (s.empty()) {
         return err<int,ParseError>(ParseError::Empty);
     }
@@ -109,7 +110,18 @@ int main() {
     });
     assert(cleaned);
 
-    // test_nested_error();
+    auto f = unwrap(parse_int("123").map([] (int i) -> float {
+        return static_cast<float>(i);
+    }));
+    assert(f == 123.0f);
 
+    auto g = parse_int("123")
+        .map([] (int i) -> float {
+            return static_cast<float>(i);
+        })
+        .unwrap();
+    assert(g == 123.0f);
+
+    test_nested_error();
     return 0;
 }
