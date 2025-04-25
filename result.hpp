@@ -108,6 +108,13 @@ struct Result<void, E> {
 
         return ok<void, decltype(f(std::declval<E>()))>();
     }
+
+    auto unwrap() -> void {
+        if (tag == Tag::Err) {
+            Display<E>::print(error);
+            std::exit(1);
+        }
+    }
 };
 
 template<typename E>

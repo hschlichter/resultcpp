@@ -91,13 +91,13 @@ int main() {
     assert(m == 0);
 
     // Non‑fatal with custom handler
-    int k = unwrap_or_else(parse_int("abc"), [](ParseError){
+    int k = unwrap_or_else(parse_int("abc"), [] (ParseError){
         return 42;
     });
     assert(k == 42);
 
     // Void unwrap
-    unwrap(validate_positive(n));
+    validate_positive(n).unwrap();
 
     // Void non‑fatal: just prints if error
     auto result = validate_positive(-5);
@@ -110,25 +110,15 @@ int main() {
     });
     assert(cleaned);
 
-    auto f = unwrap(parse_int("123").map([] (int i) -> float {
-        return static_cast<float>(i);
-    }));
-    assert(f == 123.0f);
-
-    auto g = parse_int("123")
-        .map([] (int i) -> float {
-            return static_cast<float>(i);
+    // Map value into different type
+    auto c = parse_int("42")
+        .map([] (int i) -> char {
+            return static_cast<char>(i);
         })
         .unwrap();
-    assert(g == 123.0f);
+    assert(c == '*');
 
-    auto h = parse_int("345")
-        .and_then([] (int i) {
-            return ok<float, ParseError>(static_cast<float>(i));
-        })
-        .unwrap();
-    assert(h == 345.0f);
-
+    // Linear execution
     auto check = false;
     parse_int("234")
         .and_then([&] (int) {

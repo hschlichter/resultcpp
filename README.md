@@ -11,7 +11,6 @@ Eliminates nested checks, clarifies error domains, and keeps your “happy path�
 - **Type‑Safe**: Separate error enums with support for propogation conversion.
 - **Zero Overhead**: A tag + union adds only a couple of bytes—no exceptions, no RTTI.
 - **Composable**: Chain operations with `.map_err()`, `ok_or()`, and custom traits to maintain linear control flow.
-- **Customizable**: Easily add new domains or helpers (`map()`, `and_then()`, `unwrap_or(default)`, etc.).
 
 ---
 
@@ -40,6 +39,11 @@ struct Result {
 
     template<typename F>
     auto map_err(F f) const -> Result<T, decltype(f(std::declval<E>()))>;
+
+    template<typename F>
+    auto and_then(F f) -> decltype(f(std::declval<T>())) { // You should always return a Result<T, E>
+
+    auto unwrap() -> T {
 };
 ```
 
@@ -103,13 +107,13 @@ int main() {
     assert(m == 0);
 
     // Non‑fatal with custom handler
-    int k = unwrap_or_else(parse_int("abc"), [](ParseError){
+    int k = unwrap_or_else(parse_int("abc"), [] (ParseError){
         return 42;
     });
     assert(k == 42);
 
     // Void unwrap
-    unwrap(validate_positive(n));
+    validate_positive(n).unwrap();
 
     // Void non‑fatal: just prints if error
     auto result = validate_positive(-5);
@@ -121,6 +125,23 @@ int main() {
         cleaned = true;
     });
     assert(cleaned);
+
+    // Map value into different type
+    auto c = parse_int("42")
+        .map([] (int i) -> char {
+            return static_cast<char>(i);
+        })
+        .unwrap();
+    assert(c == '*');
+
+    // Linear execution
+    auto check = false;
+    parse_int("234")
+        .and_then([&] (int) {
+            check = true;
+            return ok<ParseError>();
+        });
+    assert(check);
 
     return 0;
 }
