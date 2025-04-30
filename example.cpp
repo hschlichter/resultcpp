@@ -127,6 +127,21 @@ int main() {
         });
     assert(check);
 
+    // Match result
+    auto check_flow = false;
+    auto i = parse_int("1234");
+    match(
+        i,
+        [&] (int ii) {
+            assert(ii == 1234);
+            check_flow = true;
+        },
+        [] (ParseError) {
+            assert(false);
+        }
+    );
+    assert(check_flow);
+
     test_nested_error();
     return 0;
 }

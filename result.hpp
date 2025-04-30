@@ -89,6 +89,15 @@ auto err(E err) -> Result<T, E> {
     return r;
 }
 
+template<typename T, typename E, typename OnOk, typename OnErr>
+constexpr auto match(Result<T, E> const& r,OnOk&& onOk, OnErr&& onErr) -> std::common_type_t<decltype(onOk(std::declval<T>())), decltype(onErr(std::declval<E>()))> {
+    if (r.tag == Result<T, E>::Tag::Ok) {
+        return onOk(r.value);
+    } else {
+        return onErr(r.error);
+    }
+}
+
 template<typename E>
 struct Result<void, E> {
     using value_type = void;

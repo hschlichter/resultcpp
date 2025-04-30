@@ -49,6 +49,7 @@ struct Result {
 
 - **`ok<T,E>(val)`** constructs a successful result.  
 - **`err<T,E>(err)`** constructs an error result.
+- **`match<T, E, OnOk, OnErr>(result, onOk, onErr)`** match a result
 
 ---
 
@@ -142,6 +143,21 @@ int main() {
             return ok<ParseError>();
         });
     assert(check);
+
+    // Match result
+    auto check_flow = false;
+    auto i = parse_int("1234");
+    match(
+        i,
+        [&] (int ii) {
+            assert(ii == 1234);
+            check_flow = true;
+        },
+        [] (ParseError) {
+            assert(false);
+        }
+    );
+    assert(check_flow);
 
     return 0;
 }

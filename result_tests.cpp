@@ -139,3 +139,39 @@ TEST_CASE() {
         .unwrap();
     REQUIRE(h == 44);
 }
+
+TEST_CASE("match operator for result") {
+    auto val_ok = false;
+    auto val_err = false;
+    auto r = ok<int, TestError>(42);
+    REQUIRE(r.tag == Result<int, TestError>::Tag::Ok);
+    match(
+        r, 
+        [&] (int i) {
+            REQUIRE(i == 42);
+            val_ok = true;
+        },
+        [&] (TestError) {
+            val_err = true;
+        }
+    );
+    REQUIRE(val_ok == true);
+    REQUIRE(val_err == false);
+
+    val_ok = false;
+    val_err = false;
+    r = err<int, TestError>(TestError::A);
+    REQUIRE(r.tag == Result<int, TestError>::Tag::Err);
+    match(
+        r,
+        [&] (int) {
+            val_ok = true;
+        }, 
+        [&] (TestError e) {
+            REQUIRE(e == TestError::A);
+            val_err = true;
+        }
+    );
+    REQUIRE(val_ok == false);
+    REQUIRE(val_err == true);
+}
